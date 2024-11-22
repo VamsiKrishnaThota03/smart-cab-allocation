@@ -1,6 +1,8 @@
 Smart Cab Allocation System for Efficient Trip Planning
 
-
+Admin Credentials:
+Email: admin@gmail.com
+Password: 12345678
 
 
 
@@ -220,9 +222,6 @@ const authenticateUser = (req, res) => {
     }
 };
 
-Admin Credentials:
-Email: admin@gmail.com
-Password: 12345678
 
 
 Prerequisites
@@ -232,9 +231,6 @@ The platform requires devices with location detection capabilities to find and t
 Google Maps API:
 Ensure you have access to Google Maps services for cab location tracking and route display.
 
-Video Demonstration
-Watch a detailed demonstration of the system here: 
-https://drive.google.com/drive/folders/19pFYFNtk_M4D7LHCnGs-dzpYozc9B9bo?usp=sharing
 
 Conclusion
 The Smart Cab Allocation System optimizes cab management using real-time data and location-based algorithms. With a robust backend and seamless frontend experience, this platform is built for scalability, security, and efficiency.
