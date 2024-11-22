@@ -1,0 +1,90 @@
+.login-wrapper {
+  height: 100vh; /* Full viewport height */
+  display: flex; /* Enable flexbox */
+  justify-content: center; /* Horizontally center */
+  align-items: center; /* Vertically center */
+  background-color: #f0f0f0; /* Optional background color */
+  background-image: url(https://t3.ftcdn.net/jpg/04/38/74/68/360_F_438746833_DNCKJKHjVOkNpqAxB4Ya04l4g0Dmmgyp.jpg); /* Add the background image */
+  background-size: cover; /* Ensure the background covers the entire area */
+  background-position: center; /* Center the background image */
+  background-repeat: no-repeat; /* Prevent the image from repeating */
+}
+
+.login-container {
+  width: 300px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+input[type="email"],
+input[type="password"],
+button {
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+button {
+  background-color: rgb(255, 193, 7); /* Yellow button */
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+button:hover {
+  background-color: #e0a800; /* Darker yellow on hover */
+}
+
+.password-input-container {
+  position: relative;
+}
+
+.password-input-container input {
+  width: calc(100% - 30px);
+}
+
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #555;
+}
+
+.error-message {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+p {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+p span {
+  cursor: pointer;
+  text-decoration: underline;
+  color: blue;
+}
+
+p span:hover {
+  color: darkblue;
+}

@@ -1,0 +1,57 @@
+.navbar {
+    background-color: rgba(10, 143, 21, 0.8); 
+    padding:2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+}
+.navbar-content {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+}
+
+.navbar-brand {
+    color: rgb(247, 250, 248);
+    padding: 0 20px;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold; 
+    font-family: 'Arial Black', 'Impact', sans-serif; 
+}
+.navbar-right{
+    padding: 0 25px;
+}
+
+.logout-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    margin-right: 15px; /* Add margin-right to create space between buttons */
+}
+
+.logout-btn:last-child {
+    margin-right: 0; /* Ensure no margin on the last button (LogOut) */
+}
+
+.logout-btn:hover {
+    background-color: #0056b3; /* Darker on hover */
+}
+
+.user-icon {
+    width: 24px; /* Reduced size */
+    height: 24px; /* Reduced size */
+    margin-left: 10px; /* Space between the button and icon */
+    border-radius: 50%; 
+    vertical-align: middle; 
+    padding: 0 20px
+}
+/* Show the tooltip on hover */
+.user-icon-wrapper:hover .user-details-tooltip {
+    display: block;
+}
+
+.user-details-tooltip p {
+    margin: 0;
+    font-size: 14px;
+}

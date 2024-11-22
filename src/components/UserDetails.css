@@ -1,0 +1,33 @@
+/* UserDetails.css */
+.profile-page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align items to the top */
+    height: 100vh; /* Full height */
+    padding-top: 100px; /* Adjust the padding to move the card up */
+    background-color: #f7f7f7;
+  }
+  
+  .profile-card {
+    width: 400px;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    text-align: center; /* Center the content */
+  }
+  
+  .profile-card .card-title {
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .profile-card .card-text {
+    font-size: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center; /* Centering text horizontally */
+    align-items: center; /* Centering text vertically */
+  }
+  

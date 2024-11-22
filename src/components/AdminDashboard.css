@@ -1,0 +1,67 @@
+.dashboard-wrapper {
+    height: 100vh; /* Full viewport height */
+    display: flex; /* Enable flexbox */
+    justify-content: space-around; /* Spread content evenly */
+    align-items: center; /* Vertically center */
+    background-color: #f0f0f0; /* Optional background color */
+  }
+  
+  .dashboard-container {
+    width: 30%;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    padding: 0 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .input-container {
+    margin-bottom: 15px;
+    padding: 0 15px;
+  }
+  
+  .input-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  button {
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  .map-container {
+    width: 60%;
+    height: 80%; /* Adjust height for map */
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  
