@@ -1,0 +1,48 @@
+.admin-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.admin-form {
+  padding: 24px;
+}
+
+.admin-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-form__locate {
+  margin-bottom: 8px;
+}
+
+.admin-form .field-hint {
+  margin: 0 0 20px;
+}
+
+.admin-map {
+  min-height: 520px;
+  overflow: hidden;
+}
+
+.admin-map__canvas,
+.admin-map .map-status {
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+}
+
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-map,
+  .admin-map__canvas,
+  .admin-map .map-status {
+    min-height: 360px;
+  }
+}

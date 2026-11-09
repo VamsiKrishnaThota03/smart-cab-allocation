@@ -1,0 +1,327 @@
+:root {
+  --color-ink: #0f172a;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-surface: #ffffff;
+  --color-bg: #f1f5f9;
+  --color-accent: #fbbf24;
+  --color-accent-strong: #f59e0b;
+  --color-primary: #2563eb;
+  --color-primary-strong: #1d4ed8;
+  --color-success: #15803d;
+  --color-success-bg: #dcfce7;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fee2e2;
+  --radius: 12px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --navbar-height: 64px;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  color: var(--color-ink);
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 0.9em;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+/* Page layout */
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  margin: 0 0 4px;
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+/* Cards */
+.surface {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Buttons (scoped with .btn so Bootstrap and these styles agree) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+.btn-accent:hover:not(:disabled),
+.btn-accent:focus-visible {
+  background: var(--color-accent-strong);
+  color: var(--color-ink);
+}
+
+.btn-dark {
+  background: var(--color-ink);
+  color: #fff;
+}
+
+.btn-dark:hover:not(:disabled),
+.btn-dark:focus-visible {
+  background: #1e293b;
+  color: #fff;
+}
+
+.btn-ghost {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.btn-ghost:hover:not(:disabled),
+.btn-ghost:focus-visible,
+.btn-ghost.is-active {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+  background: #f8fafc;
+}
+
+.btn-danger-soft {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.btn-danger-soft:hover:not(:disabled),
+.btn-danger-soft:focus-visible {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+/* Forms */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--color-text);
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:hover {
+  border-color: #94a3b8;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.pw-field {
+  position: relative;
+}
+
+.pw-field .input {
+  padding-right: 44px;
+}
+
+.pw-field__toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.pw-field__toggle:hover,
+.pw-field__toggle:focus-visible {
+  color: var(--color-ink);
+  background: var(--color-bg);
+}
+
+/* Alerts */
+.alert-box {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  border: 1px solid transparent;
+}
+
+.alert-box--error {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border-color: #fecaca;
+}
+
+.alert-box--success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border-color: #bbf7d0;
+}
+
+.alert-box--info {
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-color: #bfdbfe;
+}
+
+/* Loading and empty states */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(15, 23, 42, 0.15);
+  border-top-color: var(--color-ink);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-muted);
+}
+
+.empty-state strong {
+  display: block;
+  color: var(--color-ink);
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.map-status {
+  height: 100%;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: var(--color-muted);
+  background:
+    linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(37, 99, 235, 0.06)),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(15, 23, 42, 0.05) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(15, 23, 42, 0.05) 40px),
+    #f8fafc;
+}
+
+.map-status strong {
+  color: var(--color-ink);
+}
+
+.visually-hidden-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

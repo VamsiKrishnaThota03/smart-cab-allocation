@@ -1,0 +1,112 @@
+.mycab-layout {
+  position: relative;
+  height: calc(100vh - var(--navbar-height));
+  min-height: 520px;
+}
+
+.mycab-map,
+.mycab-map__canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.mycab-panel {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  width: 360px;
+  max-height: calc(100% - 48px);
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+}
+
+.mycab-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: var(--radius);
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.mycab-status > svg {
+  flex: none;
+  font-size: 28px;
+}
+
+.mycab-status.is-arrived {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.mycab-status__label {
+  display: block;
+  font-size: 0.85rem;
+}
+
+.mycab-status__eta {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--color-ink);
+}
+
+.mycab-details {
+  margin: 0 0 20px;
+}
+
+.mycab-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mycab-details dt {
+  color: var(--color-muted);
+}
+
+.mycab-details dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-ink);
+  text-align: right;
+}
+
+.mycab-details a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.mycab-hint {
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+.empty-state p {
+  margin: 4px 0 16px;
+}
+
+@media (max-width: 720px) {
+  .mycab-layout {
+    height: auto;
+    min-height: 0;
+  }
+
+  .mycab-map {
+    height: 50vh;
+    min-height: 300px;
+  }
+
+  .mycab-panel {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    max-height: none;
+    margin: -24px 12px 24px;
+  }
+}
