@@ -1,86 +1,73 @@
-// client/backend/controllers/authController.js
-const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
+const { body } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'IamVamsiKrishna$21BCS222';
+const User = require('../models/User');
+const validate = require('../middleware/validate');
+const { requireEnv, listEnv } = require('../config/env');
 
-// Middleware for fetching user details based on JWT
-const fetchUser = (req, res, next) => {
-  const token = req.header('auth-token');
-  if (!token) return res.status(401).send('Access Denied');
-  
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded.userId; // Attach the user's ID to req object
-    next();
-  } catch (error) {
-    res.status(401).send('Invalid Token');
-  }
-};
+const signToken = (user) =>
+  jwt.sign({ userId: user._id, isAdmin: user.isAdmin }, requireEnv('JWT_SECRET'), {
+    expiresIn: '1h',
+  });
+
+// Admin rights are granted only to emails listed in ADMIN_EMAILS.
+const isAdminEmail = (email) =>
+  listEnv('ADMIN_EMAILS')
+    .map((item) => item.toLowerCase())
+    .includes(String(email).toLowerCase());
 
 exports.register = [
-  body('email').isEmail().withMessage('Invalid email address'),
+  body('name').trim().isLength({ min: 3 }).withMessage('Name must be at least 3 characters long'),
+  body('email').trim().isEmail().withMessage('Invalid email address'),
   body('password').isLength({ min: 5 }).withMessage('Password must be at least 5 characters long'),
-  body('name').isLength({ min: 3 }).withMessage('Name must be at least 3 characters long'),
+  validate,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ message: errors.array()[0].msg });
-    }
-
     const { email, password, name } = req.body;
     try {
-      let user = await User.findOne({ email });
-      if (user) {
+      const existing = await User.findOne({ email });
+      if (existing) {
         return res.status(400).json({ message: 'A user with this email already exists' });
       }
 
-      // Set isAdmin for the admin user
-      const isAdmin = email === 'admin@gmail.com';
+      const hashed = await bcrypt.hash(password, 10);
+      const user = await User.create({ email, password: hashed, name, isAdmin: isAdminEmail(email) });
 
-      user = new User({ email, password, name, isAdmin });
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
-      await user.save();
-
-      // Create a JWT token right after registering the user
-      const payload = { userId: user._id, isAdmin: user.isAdmin };
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-
-      // Send the token back to the client
-      res.json({ token });
+      res.status(201).json({ token: signToken(user), isAdmin: user.isAdmin });
     } catch (error) {
+      console.error('Register error:', error.message);
       res.status(500).json({ message: 'Server error. Please try again later.' });
     }
   },
 ];
 
+exports.login = [
+  body('email').trim().isEmail().withMessage('Invalid email address'),
+  body('password').isString().notEmpty().withMessage('Password is required'),
+  validate,
+  async (req, res) => {
+    const { email, password } = req.body;
+    try {
+      const user = await User.findOne({ email });
+      if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid Credentials' });
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
+      res.json({ token: signToken(user), isAdmin: user.isAdmin });
+    } catch (error) {
+      console.error('Login error:', error.message);
+      res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+  },
+];
 
-    const payload = { userId: user._id, isAdmin: user.isAdmin };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-
-    res.json({ token, isAdmin: user.isAdmin }); // Return isAdmin flag
-  } catch (error) {
-    res.status(500).send('Server Error');
-  }
-};
-
-// Add this getuser function to get the user details
 exports.getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user).select('-password'); // Fetch user without password
+    const user = await User.findById(req.user).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (error) {
-    res.status(500).send('Server Error');
+    console.error('Get user error:', error.message);
+    res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 };

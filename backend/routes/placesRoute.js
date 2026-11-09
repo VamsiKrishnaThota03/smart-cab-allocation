@@ -1,64 +1,79 @@
 const express = require('express');
 const axios = require('axios');
+const { query } = require('express-validator');
+const fetchUser = require('../middleware/fetchUser');
+const validate = require('../middleware/validate');
+
 const router = express.Router();
-require('dotenv').config();
-const GOOGLE_PLACES_API_KEY = process.env.api;// Replace with your actual API key
+const GOOGLE_API = 'https://maps.googleapis.com/maps/api';
 
-// Route to get nearby places
-router.get('/places', async (req, res) => {
-  const { lat, lng } = req.query;
+const latLng = [
+  query('lat').isFloat({ min: -90, max: 90 }).withMessage('lat must be a number between -90 and 90'),
+  query('lng').isFloat({ min: -180, max: 180 }).withMessage('lng must be a number between -180 and 180'),
+];
 
-  try {
-    const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=10&key=${GOOGLE_PLACES_API_KEY}`
-    );
-    res.json(response.data); // Send the nearby search data back to the frontend
-  } catch (error) {
-    console.error('Google Nearby Search API Error:', error.message);
-    res.status(500).json({ error: 'Failed to fetch places data' });
+// All proxy routes need a logged-in user so the server key cannot be used as an open proxy.
+router.use(fetchUser);
+router.use((req, res, next) => {
+  if (!process.env.GOOGLE_MAPS_API_KEY) {
+    return res.status(503).json({ message: 'GOOGLE_MAPS_API_KEY is not configured on the server.' });
   }
+  next();
 });
 
-// Route to get place details (to get postal code)
-router.get('/place-details', async (req, res) => {
-  const { placeId } = req.query;
-
-  try {
-    const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_PLACES_API_KEY}`
-    );
-    res.json(response.data); // Send the place details back to the frontend
-  } catch (error) {
-    console.error('Google Place Details API Error:', error.message);
-    res.status(500).json({ error: 'Failed to fetch place details' });
-  }
-});
-
-
-// Route to get postal code using Geocoding API
-router.get('/geocode', async (req, res) => {
-    const { lat, lng } = req.query;
-  
-    try {
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_PLACES_API_KEY}`
-      );
-  
-      if (response.data.status === 'OK' && response.data.results.length > 0) {
-        const addressComponents = response.data.results[0].address_components;
-  
-        // Extract postal code from address components
-        const postalCode = addressComponents.find(comp => comp.types.includes('postal_code'))?.long_name || 'N/A';
-  
-        res.json({ postalCode });
-      } else {
-        res.status(404).json({ error: 'No postal code found for the given coordinates.' });
-      }
-    } catch (error) {
-      console.error('Geocoding API Error:', error.message);
-      res.status(500).json({ error: 'Failed to fetch postal code.' });
-    }
+const google = (path, params) =>
+  axios.get(`${GOOGLE_API}/${path}`, {
+    params: { ...params, key: process.env.GOOGLE_MAPS_API_KEY },
+    timeout: 10000,
   });
 
-module.exports = router;
+// Nearby places
+router.get('/places', latLng, validate, async (req, res) => {
+  const { lat, lng } = req.query;
+  try {
+    const response = await google('place/nearbysearch/json', { location: `${lat},${lng}`, radius: 10 });
+    res.json(response.data);
+  } catch (error) {
+    console.error('Google Nearby Search API error:', error.message);
+    res.status(502).json({ message: 'Failed to fetch places data' });
+  }
+});
 
+// Place details
+router.get(
+  '/place-details',
+  query('placeId').matches(/^[A-Za-z0-9_-]{1,512}$/).withMessage('Invalid placeId'),
+  validate,
+  async (req, res) => {
+    try {
+      const response = await google('place/details/json', { place_id: req.query.placeId });
+      res.json(response.data);
+    } catch (error) {
+      console.error('Google Place Details API error:', error.message);
+      res.status(502).json({ message: 'Failed to fetch place details' });
+    }
+  }
+);
+
+// Reverse geocode: returns { postalCode, town }
+router.get('/geocode', latLng, validate, async (req, res) => {
+  const { lat, lng } = req.query;
+  try {
+    const response = await google('geocode/json', { latlng: `${lat},${lng}` });
+    const results = response.data.results || [];
+
+    if (response.data.status !== 'OK' || results.length === 0) {
+      return res.status(404).json({ message: 'No address found for the given coordinates.' });
+    }
+
+    const components = results[0].address_components || [];
+    const find = (type) => components.find((c) => c.types.includes(type))?.long_name || null;
+
+    res.json({ postalCode: find('postal_code'), town: find('locality') });
+  } catch (error) {
+    console.error('Geocoding API error:', error.message);
+    res.status(502).json({ message: 'Failed to reverse geocode the location.' });
+  }
+});
+
+module.exports = router;

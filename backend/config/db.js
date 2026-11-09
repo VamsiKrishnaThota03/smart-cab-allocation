@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
+const { requireEnv } = require('./env');
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb+srv://vamsikrishnathota483:Tvkrishna%401@cluster0.01rgp.mongodb.net/');
-    console.log('MongoDB Connected');
+    await mongoose.connect(requireEnv('MONGO_URI'));
+    console.log('MongoDB connected');
   } catch (error) {
-    console.error('MongoDB Connection Error:', error.message);
+    console.error('MongoDB connection error:', error.message);
     process.exit(1);
   }
 };
