@@ -1,236 +1,156 @@
-Smart Cab Allocation System for Efficient Trip Planning
+# Smart Cab Allocation
 
-Admin Credentials:
-Email: admin@gmail.com
-Password: 12345678
+A full-stack cab booking app. Riders find the nearest available cab on Google Maps, book it and follow it along the driving route. Admins manage cabs and users. Built with React, Express, MongoDB and the Google Maps APIs.
 
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-Express%204-339933?logo=nodedotjs&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose%208-47A248?logo=mongodb&logoColor=white)
+![Google Maps](https://img.shields.io/badge/Google%20Maps-API-4285F4?logo=googlemaps&logoColor=white)
+![JWT](https://img.shields.io/badge/auth-JWT-000000?logo=jsonwebtokens)
 
+This repository contains the **React frontend at the root** and the **Express API in `backend/`**. The same code is also published as two separate repositories, which is what the live deployment uses:
 
+- Frontend: [smart-cab-allocation-frontend](https://github.com/VamsiKrishnaThota03/smart-cab-allocation-frontend)
+- Backend: [smart-cab-allocation-backend](https://github.com/VamsiKrishnaThota03/smart-cab-allocation-backend)
 
-Project Overview
+The code here points at `http://localhost:5001` for local development. The split repos point at the deployed Render backend.
 
-The Smart Cab Allocation System is designed to optimize cab allocation and enhance trip planning efficiency by using real-time location data. It leverages Google Maps APIs and the Haversine formula for location-based cab searches, providing both admins and users with a seamless experience for booking and managing rides.
+## Live demo
 
-Features
-1. Admin's Cab Allocation Optimization
-Objective:
-To develop an algorithm that optimizes cab allocation by reducing the overall travel distance between cabs and trip start locations.
+**https://smart-cab-allocation-frontend.vercel.app/login**
 
-Key Tasks:
-An algorithm suggests the best cab based on proximity to the trip's start location.
-Real-time location data for cabs and trip start points is integrated.
-The algorithm is tested for minimizing travel distance and improving trip efficiency.
+Admin demo account:
 
+| Email | Password |
+| --- | --- |
+| `admin@gmail.com` | `12345678` |
 
-2. Employee/User's Cab Search Optimization
-Objective:
-Enhance the user experience by providing relevant and nearby cab suggestions.
+## Overview
 
-Key Tasks:
-Utilize real-time data to display cabs currently engaged in trips that are still nearby the user’s location.
-Provide quick and accurate cab suggestions based on proximity and availability.
+Cabs are stored in MongoDB with coordinates, town, pincode and a booking status. When a rider searches from a pickup location, the frontend works out the distance to every available cab with the Haversine formula and sorts them. It then builds a "nearest cabs" list of cabs that are within 5 km **or** share the rider's town or pincode (from Google reverse geocoding). Booking a cab marks it unavailable. The trip view draws the Google Directions route from the cab to the rider and animates the cab along it. Ending the trip moves the cab to the drop-off point and makes it available again.
 
+### Nearest-cab distance
 
-3. Real-Time Location Data Integration
-Objective:
-Ensure seamless integration of real-time data to improve the accuracy of cab allocation and tracking.
-
-Key Tasks:
-Set up real-time tracking for cab locations using Google Maps APIs.
-Integrate location data into the cab allocation algorithm for real-time updates.
-Handle potential issues like data latency and inaccuracies to maintain system reliability.
-
-Tech Stack
-Frontend:
-React.js: For building the user interface and creating dynamic web pages.
-HTML/CSS: For structuring and styling the web application.
-JavaScript (ES6): For client-side scripting and logic.
-Bootstrap: For responsive design and UI components.
-
-Backend:
-Node.js: Server-side JavaScript runtime.
-Express.js: Backend framework for building APIs and handling HTTP requests.
-JWT (JSON Web Tokens): For user authentication and session management.
-Express Validator: For validating and sanitizing input data.
-
-Database:
-MongoDB: NoSQL database to store user, cab, and trip data.
-
-APIs & Libraries:
-Google Maps API: For real-time location tracking, calculating distances, and rendering maps.
-Mongoose: MongoDB object modeling for Node.js.
-Haversine Formula: Used to calculate the distance between two latitudes/longitude
-
-Prerequisites
-Location-Detectable Devices:
-Ensure that users have location detection enabled on their devices (laptops, smartphones) to allow the system to fetch accurate current positions for cab searches.
-
-Google Maps API Access:
-The platform uses Google Maps to fetch latitude, longitude, pincode, town, and actual road points for cab tracking and real-time trip management. Ensure you have valid API keys set up for Maps functionality.
-
-Project Structure
-Backend  
-
-/backend
-│
-├── /config
-│   └── db.js                   # Database configuration (MongoDB connection)
-│
-├── /controllers
-│   ├── authController.js        # Authentication logic (register, login, getUser)
-│   ├── cabController.js         # Cab-related logic (e.g., add, book, available cabs)
-│   └── adminController.js       # Admin logic (manage users, view stats)
-│
-├── /middleware
-│   └── fetchUser.js             # Middleware to authenticate and authorize users (check if admin)
-│
-├── /models
-│   ├── Cab.js                   # Cab model schema (driver, vehicle info, availability)
-│   └── User.js                  # User model schema (user details, role for admin/user)
-│
-├── /routes
-│   ├── authRoutes.js            # Routes for authentication (register, login, getUser)
-│   ├── cabRoutes.js             # Routes for cab actions (addCab, availableCabs, bookCab, endTrip)
-│   └── adminRoutes.js           # Admin routes (manage users, view stats)
-│
-├── server.js                    # Entry point for backend server (express app)
-└── /utils
-    └── validation.js            # Utility for input validation, e.g., email, password strength
-
-
-Frontend
-
-/src
-│
-├── /components
-│   ├── AdminDashboard.js        # Admin view for managing users and cabs
-│   ├── AdminNavbar.js           # Navbar for the admin panel
-│   ├── Home.js                  # Home view for users (display available cabs, book cabs)
-│   ├── Login.js                 # Login form (for both users and admin)
-│   ├── Navbar.js                # Navbar for user views
-│   ├── PrivateRoute.js          # Route guard to protect user-specific and admin routes
-│   ├── SignUp.js                # User sign-up form
-│   ├── UserDetails.js           # User profile details (edit profile)
-│   ├── MyCab.js                 # Cab booking and tracking (book, track, cancel trips)
-│   ├── AdminUsers.js            # Admin component for managing users (view, delete, update)
-│   ├── AdminUsers.css           # New styling for Admin Users page
-│
-│
-├── index.js                     # Main React entry point
-└── App.js                       # Main application component (including routing and state management)
-
-
-Smart Cab Allocation System for Efficient Trip Planning
-Project Overview
-The Smart Cab Allocation System is designed to optimize cab allocation and enhance trip planning efficiency by using real-time location data. It leverages Google Maps APIs and the Haversine formula for location-based cab searches, providing both admins and users with a seamless experience for booking and managing rides.
-
-Features
-1. Admin's Cab Allocation Optimization
-Objective:
-To develop an algorithm that optimizes cab allocation by reducing the overall travel distance between cabs and trip start locations.
-
-Key Tasks:
-
-An algorithm suggests the best cab based on proximity to the trip's start location.
-Real-time location data for cabs and trip start points is integrated.
-The algorithm is tested for minimizing travel distance and improving trip efficiency.
-2. Employee/User's Cab Search Optimization
-Objective:
-Enhance the user experience by providing relevant and nearby cab suggestions.
-
-Key Tasks:
-
-Utilize real-time data to display cabs currently engaged in trips that are still nearby the user’s location.
-Provide quick and accurate cab suggestions based on proximity and availability.
-3. Real-Time Location Data Integration
-Objective:
-Ensure seamless integration of real-time data to improve the accuracy of cab allocation and tracking.
-
-Key Tasks:
-
-Set up real-time tracking for cab locations using Google Maps APIs.
-Integrate location data into the cab allocation algorithm for real-time updates.
-Handle potential issues like data latency and inaccuracies to maintain system reliability.
-Prerequisites
-Location-Detectable Devices:
-Ensure that users have location detection enabled on their devices (laptops, smartphones) to allow the system to fetch accurate current positions for cab searches.
-
-Google Maps API Access:
-The platform uses Google Maps to fetch latitude, longitude, pincode, town, and actual road points for cab tracking and real-time trip management. Ensure you have valid API keys set up for Maps functionality.
-
-
-API Endpoints
-
-Authentication APIs
-
-POST /api/auth/register – Register a new user.
-POST /api/auth/login – Login and receive a JWT token.
-GET /api/auth/getUser – Get authenticated user details.
-
-Cab APIs
-
-POST /api/cabs/addCab – Admin adds a new cab.
-GET /api/cabs/availableCabs – Fetch all available cabs for users.
-POST /api/cabs/bookCab/:cabId – Book a cab by ID.
-POST /api/cabs/endTrip/:cabId – End a trip by cab ID, making it available again.
-
-
-Nearest Cab Algorithm
-The system uses the Haversine formula to calculate the distance between the user’s location and available cabs. Cabs within the same pincode or within a 5 km radius are considered for the "nearest cabs" list.
-
+```js
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radius of the Earth in km
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a = 
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in km
-    return distance;
+  const R = 6371; // Earth radius in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); // km
 };
+```
 
+## Features
 
-Features
-Real-Time Cab Tracking:
-Users can track the live location of their booked cab through Google Maps, with an animation showing the cab's movement and ETA.
+**Riders**
+- Sign up and log in with JWT auth. The token is kept in `localStorage`, and protected routes use a `PrivateRoute` guard.
+- A Google Map shows your current location (browser Geolocation API) and every available cab as a taxi marker.
+- Enter pickup ("From", filled in from your location) and drop-off ("To") coordinates to find cabs:
+  - all available cabs are sorted by straight-line distance (Haversine formula), with an estimated time to reach you
+  - the "nearest cabs" list keeps cabs within **5 km**, or in the same **town or pincode** (Google Geocoding API)
+- Book a cab. It is marked unavailable for other users.
+- **My Cab** page: the app draws a driving route from the cab to you (Google Directions API) and animates the cab marker along it, updating the remaining distance and ETA. When the cab arrives, **End Trip** unlocks and moves the cab to the drop-off point, making it available again.
+- Profile page with the logged-in user's details
 
-Booking & Trip Management:
-Once a cab is booked, it is marked as unavailable for other users. Admins and users can track and end trips, updating cab availability.
+**Admins**
+- Admin dashboard for adding a cab (name, phone, email, location). Set the location by clicking the map or typing coordinates; town and pincode are filled in by reverse geocoding.
+- Manage users: list all users and delete non-admin users
+- Admin-only routes check the `isAdmin` claim in the JWT
 
-Admin Dashboard:
-Admins can manage cabs, Admins can also add new cabs by clicking on map locations.
+## Tech stack
 
+| Layer | Tools |
+| --- | --- |
+| Frontend | React 18 (Create React App), React Router 6, `axios`, `jwt-decode`, `@react-google-maps/api`, Google Maps JavaScript API |
+| Backend | Node.js, Express 4, Mongoose 8, `jsonwebtoken`, `bcryptjs`, `express-validator`, `axios`, Socket.IO, `dotenv`, `cors` |
+| Database | MongoDB |
+| External APIs | Google Maps (Maps JS, Directions, Geocoding, Places) |
 
-Authentication
-The platform uses JWT (JSON Web Tokens) for secure user authentication and Express Validator for data validation.
+## Project structure
 
-Example for JWT:
+```
+smart-cab-allocation/
+├── backend/
+│   ├── server.js            # Express + Socket.IO entry (port 5001)
+│   ├── config/db.js         # MongoDB connection
+│   ├── controllers/         # auth, admin (cabController.js is not mounted)
+│   ├── middleware/          # fetchUser (JWT), isAdmin
+│   ├── models/              # User, Cab
+│   └── routes/              # auth, cabs, admin, places/geocode
+├── public/
+└── src/
+    ├── App.js               # routes
+    └── components/          # Home, MyCab, Login, SignUp, UserDetails,
+                             # AdminDashboard, AdminUsers, Navbar, PrivateRoute
+```
 
-const jwt = require('jsonwebtoken');
+## Getting started
 
-const authenticateUser = (req, res) => {
-    const token = req.headers['authorization'];
-    if (!token) return res.status(403).send('Token required');
-    try {
-        const decoded = jwt.verify(token, 'your-secret-key');
-        req.user = decoded;
-        next();
-    } catch (error) {
-        return res.status(401).send('Invalid Token');
-    }
-};
+### Prerequisites
 
+- Node.js and npm
+- A MongoDB database (local or Atlas)
+- A Google Maps API key with the Maps JavaScript, Directions, Geocoding and Places APIs enabled
+- A browser with location access enabled
 
+### Install
 
-Prerequisites
-Location-Enabled Devices:
-The platform requires devices with location detection capabilities to find and track nearby cabs.
+```bash
+git clone https://github.com/VamsiKrishnaThota03/smart-cab-allocation.git
+cd smart-cab-allocation
+npm install                 # frontend (also installs nodemon / concurrently)
+cd backend && npm install && cd ..
+```
 
-Google Maps API:
-Ensure you have access to Google Maps services for cab location tracking and route display.
+### Environment variables (`backend/.env`)
 
+| Variable | Description |
+| --- | --- |
+| `PORT` | API port (optional, default `5001`) |
+| `api` | Google Maps API key used by the backend places/geocode routes |
+| `JWT_SECRET` | JWT signing secret |
 
-Conclusion
-The Smart Cab Allocation System optimizes cab management using real-time data and location-based algorithms. With a robust backend and seamless frontend experience, this platform is built for scalability, security, and efficiency.
+```env
+PORT=5001
+api=<your-google-maps-api-key>
+JWT_SECRET=<a-long-random-secret>
+```
+
+> **Note:** the current code hard-codes the MongoDB connection string (`backend/config/db.js`), the JWT secret (`backend/controllers/authController.js`, `backend/middleware/*.js`) and the frontend's Google Maps key (`src/components/Home.js`, `MyCab.js`, `AdminDashboard.js`). Replace them with your own values, ideally read from environment variables.
+
+### Run
+
+```bash
+npm run both     # React dev server (:3000) + nodemon backend/server.js (:5001)
+```
+
+Or run them separately:
+
+```bash
+npm start                    # frontend
+node backend/server.js       # backend
+```
+
+## API
+
+Protected routes need the JWT in an `auth-token` header.
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| POST | `/api/auth/register` | - | Register (`name`, `email`, `password`) and return a JWT |
+| POST | `/api/auth/login` | - | Log in and return `{ token, isAdmin }` |
+| POST | `/api/auth/getuser` | User | Current user's profile |
+| POST | `/api/cabs/addCab` | User | Add a cab |
+| GET | `/api/cabs/availableCabs` | - | List available cabs |
+| POST | `/api/cabs/bookCab/:cabId` | User | Book a cab |
+| POST | `/api/cabs/endTrip/:cabId` | - | End the trip, move the cab to the drop-off point and free it |
+| GET | `/api/admin/users` | Admin | List users |
+| DELETE | `/api/admin/users/:id` | Admin | Delete a non-admin user |
+| GET | `/api/places?lat=&lng=` | - | Google Places Nearby Search proxy |
+| GET | `/api/place-details?placeId=` | - | Google Place Details proxy |
+| GET | `/api/geocode?lat=&lng=` | - | Reverse geocode and return `{ postalCode }` |
+
+The backend also runs a Socket.IO server that re-broadcasts `cabLocationUpdate` events. The current frontend does not use it; trip movement is animated on the client.
