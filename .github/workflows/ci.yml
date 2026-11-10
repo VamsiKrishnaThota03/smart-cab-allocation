@@ -1,0 +1,250 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: backend (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - name: Test
+        run: npm test
+
+  bind-address:
+    # The listener used to be `server.listen(PORT)`, which binds every
+    # interface. This job inspects the actual listening socket, because that is
+    # the only way to prove the bind rather than the intent.
+    name: binds loopback by default
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+
+      - name: Default bind is 127.0.0.1, not 0.0.0.0
+        env:
+          MONGO_URI: mongodb://127.0.0.1:27017/unused
+          JWT_SECRET: ci-only-secret
+          PORT: '5001'
+        run: |
+          set -euo pipefail
+          node server.js > server.log 2>&1 & SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:5001/health > /dev/null && break
+            sleep 1
+          done
+
+          echo "--- listening sockets on 5001 ---"
+          ss -ltnp 2>/dev/null | grep ':5001' || true
+
+          if ss -ltn 2>/dev/null | grep -qE '(0\.0\.0\.0|\*):5001'; then
+            echo "::error::server is listening on all interfaces by default"
+            ss -ltn | grep ':5001'
+            exit 1
+          fi
+          ss -ltn 2>/dev/null | grep -q '127.0.0.1:5001' \
+            || { echo "::error::no loopback listener found on 5001"; ss -ltn; exit 1; }
+          echo "loopback-only bind confirmed"
+
+      - name: HOST=0.0.0.0 is still honoured for container hosting
+        env:
+          MONGO_URI: mongodb://127.0.0.1:27017/unused
+          JWT_SECRET: ci-only-secret
+          PORT: '5002'
+          HOST: 0.0.0.0
+        run: |
+          set -euo pipefail
+          node server.js > server2.log 2>&1 & SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:5002/health > /dev/null && break
+            sleep 1
+          done
+          ss -ltn 2>/dev/null | grep -qE '(0\.0\.0\.0|\*):5002' \
+            || { echo "::error::HOST override was ignored"; ss -ltn; exit 1; }
+          echo "HOST override works"
+
+  integration:
+    name: integration against real MongoDB
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      MONGO_URI: mongodb://127.0.0.1:27017/smartcab_test
+      JWT_SECRET: ci-only-secret-never-used-in-a-deployment
+      HOST: 127.0.0.1
+      PORT: '5001'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+
+      - name: Readiness turns green and auth round-trips against Mongo
+        run: |
+          set -euo pipefail
+          node server.js > server.log 2>&1 & SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:5001/health > /dev/null && break
+            sleep 1
+          done
+
+          # Readiness should flip to ready once Mongoose connects.
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:5001/health/ready | grep -q '"status":"ready"'; then
+              ready=1; break
+            fi
+            sleep 1
+          done
+          test "$ready" = "1" || { echo "::error::readiness never turned green"; cat server.log; exit 1; }
+
+          body='{"name":"CI User","email":"ci@example.test","password":"Passw0rd123!"}'
+          curl -fsS -X POST http://127.0.0.1:5001/api/auth/register \
+            -H 'Content-Type: application/json' -d "$body" > reg.json
+          cat reg.json
+
+          # The password hash must never come back in a response.
+          if grep -q '"password"' reg.json; then
+            echo "::error::password field returned by /api/auth/register"
+            exit 1
+          fi
+
+          curl -fsS -X POST http://127.0.0.1:5001/api/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"ci@example.test","password":"Passw0rd123!"}' > login.json
+          cat login.json
+          grep -q 'token' login.json || { echo "::error::login returned no token"; exit 1; }
+
+          # An anonymous admin call must be refused.
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5001/api/admin/users)
+          test "$code" = "401" -o "$code" = "403" \
+            || { echo "::error::anonymous admin call returned $code"; exit 1; }
+          echo "integration OK"
+
+      - name: Graceful shutdown on SIGTERM
+        run: |
+          set -euo pipefail
+          PORT=5003 node server.js & SERVER_PID=$!
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:5003/health > /dev/null && break
+            sleep 1
+          done
+          kill -TERM $SERVER_PID
+          for i in $(seq 1 15); do
+            if ! kill -0 $SERVER_PID 2>/dev/null; then echo "exited cleanly"; exit 0; fi
+            sleep 1
+          done
+          echo "::error::server did not shut down on SIGTERM"
+          exit 1
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # postinstall runs `npm --prefix backend install`, which is wanted
+      # locally but just slows CI down; the backend has its own job.
+      - run: npm ci --ignore-scripts
+
+      - name: Test
+        run: npm test -- --watchAll=false
+        env:
+          CI: 'true'
+
+      - name: Build
+        run: npm run build
+        env:
+          CI: 'true'
+          # CRA treats warnings as errors when CI=true; this build is only
+          # checking that the bundle compiles.
+          DISABLE_ESLINT_PLUGIN: 'true'
+
+  docker:
+    name: backend image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          load: true
+          tags: smart-cab-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Image refuses to start without JWT_SECRET
+        run: |
+          set +e
+          output=$(docker run --rm -e MONGO_URI=mongodb://127.0.0.1:27017/x smart-cab-backend:ci 2>&1)
+          status=$?
+          set -e
+          echo "$output"
+          test "$status" -ne 0 || { echo "::error::started without JWT_SECRET"; exit 1; }
+          echo "$output" | grep -q "JWT_SECRET" || { echo "::error::expected a JWT_SECRET error"; exit 1; }

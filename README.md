@@ -8,6 +8,10 @@ A full-stack cab booking app. Riders find the nearest available cab on Google Ma
 ![Google Maps](https://img.shields.io/badge/Google%20Maps-API-4285F4?logo=googlemaps&logoColor=white)
 ![JWT](https://img.shields.io/badge/auth-JWT-000000?logo=jsonwebtokens)
 
+[![CI](https://github.com/VamsiKrishnaThota03/smart-cab-allocation/actions/workflows/ci.yml/badge.svg)](https://github.com/VamsiKrishnaThota03/smart-cab-allocation/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/VamsiKrishnaThota03/smart-cab-allocation/actions/workflows/codeql.yml/badge.svg)](https://github.com/VamsiKrishnaThota03/smart-cab-allocation/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 This repository contains the **React frontend at the root** and the **Express API in `backend/`**. The same code is also published as two separate repositories, which is what the live deployment uses:
 
 - Frontend: [smart-cab-allocation-frontend](https://github.com/VamsiKrishnaThota03/smart-cab-allocation-frontend)
@@ -117,6 +121,10 @@ cp backend/.env.example backend/.env
 | `ADMIN_EMAILS` | No | Comma-separated emails that get admin rights when they register |
 | `CORS_ORIGIN` | No | Comma-separated allowed browser origins, for example `https://smart-cab-allocation-frontend.vercel.app`. When empty, every origin is allowed (fine for local development) |
 | `PORT` | No | API port, default `5001` |
+| `HOST` | No | Bind address. Defaults to `127.0.0.1`, or `0.0.0.0` when a managed-platform marker (`RENDER`, `FLY_APP_NAME`, `RAILWAY_ENVIRONMENT`, `DYNO`) is present |
+| `RATE_LIMIT_MAX` | No | Requests per IP per 15 minutes across all routes, default `600` |
+| `AUTH_RATE_LIMIT_MAX` | No | Login/register attempts per IP+email per 15 minutes, default `20` |
+| `PLACES_RATE_LIMIT_MAX` | No | Google Maps proxy calls per IP per minute, default `30` |
 
 The server exits with a clear message if `MONGO_URI` or `JWT_SECRET` is missing.
 
@@ -153,7 +161,57 @@ To make yourself an admin, put your email in `ADMIN_EMAILS` before you register.
 | `npm test` | Frontend tests (Jest + Testing Library) |
 | `npm run server` / `npm run server:dev` | API with `node` / `nodemon` |
 | `npm run both` | Frontend and API together |
-| `npm --prefix backend test` | API smoke tests (no database needed) |
+| `npm --prefix backend test` | 15 API tests (no database needed) |
+| `npm --prefix backend run test:coverage` | Same, with coverage |
+
+## Hardening and operations
+
+The API listener used to be `server.listen(PORT)`, which binds **every**
+interface — so a development server was reachable from anyone on the same
+network. It now defaults to `127.0.0.1`, detects managed platforms by their own
+environment markers, and honours an explicit `HOST`. A CI job inspects the real
+listening socket with `ss -ltn` rather than trusting the code, because the bind
+is the kind of thing that regresses quietly.
+
+Added alongside it:
+
+- **helmet** with a deny-all CSP (this is a JSON API; nothing is ever loaded
+  from it as a subresource), `nosniff`, and `no-referrer`.
+- **Three rate limiters.** A global ceiling; a tighter one on `/api/auth` keyed
+  on IP **plus the submitted email**, so one attacker behind a shared address
+  cannot lock out everyone else, and which counts successes as well as failures
+  so a valid login cannot refill the budget; and a per-minute cap on the Google
+  Maps proxy routes, which spend real money per call. `trust proxy` is set to
+  exactly one hop, so `X-Forwarded-For` cannot be spoofed to bypass them.
+- **Split health probes.** `GET /health` is liveness and never touches Mongo,
+  so a database blip cannot trigger a restart loop. `GET /health/ready` reports
+  Mongoose's connection state and answers 503 with `Retry-After: 30` until it
+  is usable.
+- **Graceful shutdown** on SIGTERM/SIGINT that closes Socket.IO then the HTTP
+  server, so a deploy does not sever live cab-location streams abruptly.
+
+### Continuous integration
+
+| Job | What it proves |
+| --- | --- |
+| `backend` (Node 20, 22) | 15 API tests, no database required |
+| `bind-address` | Boots the real server and reads `ss -ltn`: no `0.0.0.0:5001` listener by default, a loopback one present, and `HOST=0.0.0.0` still honoured for container hosting |
+| `integration` | Against a MongoDB 7 service container: readiness turns green, register/login round-trip over HTTP, the password hash never appears in a response, an anonymous admin call is refused, and `SIGTERM` exits cleanly |
+| `frontend` | 5 Jest + Testing Library tests and a production build |
+| `docker` | The backend image builds and refuses to start without `JWT_SECRET` |
+
+### Docker
+
+```bash
+printf 'MONGO_PASSWORD=%s\nJWT_SECRET=%s\n' \
+  "$(openssl rand -hex 16)" "$(openssl rand -hex 32)" > .env
+
+docker compose up --build
+```
+
+MongoDB and the API both publish to `127.0.0.1` only, so neither is reachable
+from your network, and Compose fails fast with a named error if either variable
+is missing.
 
 ## API
 
@@ -192,3 +250,5 @@ The server also runs a Socket.IO relay that re-broadcasts `cabLocationUpdate` ev
 - Ending a trip moves the cab straight to the drop-off; the ride from pickup to drop-off is not animated.
 - JWTs are kept in `localStorage` and expire after one hour.
 - `npm audit` still reports issues inside `react-scripts` (Create React App) that need a breaking upgrade to fix.
+- Rate limit counters live in process memory, so every ceiling is per instance. Scaling past one would need a shared store (Redis) for the limits to hold globally.
+- `CORS_ORIGIN` unset allows any origin. Acceptable locally, and the API uses a bearer token in `auth-token` rather than cookies, so there is no ambient credential for a hostile page to abuse — but it should be set in production, and must be if cookie auth is ever introduced.

@@ -12,7 +12,9 @@ let base;
 const token = (isAdmin) => jwt.sign({ userId: '64b000000000000000000001', isAdmin }, process.env.JWT_SECRET);
 
 before(async () => {
-  server = app.listen(0);
+  // Loopback explicitly: an ephemeral port on all interfaces would briefly
+  // expose the test server to the local network.
+  server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}`;
 });
